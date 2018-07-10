@@ -22,7 +22,7 @@ from astropy.table import QTable, Table
 from astropy.wcs import WCS, NoConvergence
 from astropy.wcs.utils import proj_plane_pixel_scales
 
-__all__ = ['make_cutouts', 'show_cutout_with_slit']
+__all__ = ['make_cutouts', 'show_cutout_with_slit', 'cutout_tool']
 
 
 def cutout_tool(image, catalog, image_ext=0, origin=0,
