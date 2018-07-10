@@ -67,13 +67,16 @@ def cutout_tool(image, catalog, image_ext=0, origin=0,
         >>> ids = ["Galax_0", 123, 53.15059559*u.deg]
         >>> cutout_width = cutout_height = [3.0, 4.0, 3.0] * u.arcsec
 
-        >>> catalog = Table(data=[ids, ra, dec, cutout_width, cutout_height], \
-                            names=['id', 'ra', 'dec', 'cutout_width', 'cutout_height'])
-    To get a list of PrimaryHDU objects:
+        >>> catalog = Table(
+        ...     data=[ids, ra, dec, cutout_width, cutout_height],
+        ...     names=['id', 'ra', 'dec', 'cutout_width', 'cutout_height'])
+
+        # To get a list of PrimaryHDU objects:
         >>> cutouts = cutout_tool('h_udf_wfc_b_drz_img.fits', catalog)
-    To save to fits file, (returns a list of file names):
+        # To save to fits file, (returns a list of file names):
         >>> cutouts = cutout_tool('h_udf_wfc_b_drz_img.fits', catalog, to_fits=True)
-    If the above catalog table is saved in an ECSV file with the proper units information:
+
+        # If the above catalog table is saved in an ECSV file with the proper units information:
         >>> cutouts = cutout_tool('h_udf_wfc_b_drz_img.fits', 'catalog.ecsv')
 
     Parameters
