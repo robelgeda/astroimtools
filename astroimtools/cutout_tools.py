@@ -113,7 +113,6 @@ def cutout_tool(image, catalog, image_ext=0, origin=0,
         A list of PrimaryHDU or file names (if saving to fits).
         If cutout failed for a target, `None` will be added as a
         place holder.
-
     """
     # Optional dependencies...
     from reproject.interpolation.high_level import reproject_interp
