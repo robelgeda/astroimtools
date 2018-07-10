@@ -69,12 +69,10 @@ def cutout_tool(image, catalog, image_ext=0, origin=0,
 
         >>> catalog = Table(data=[ids, ra, dec, cutout_width, cutout_height], \
                             names=['id', 'ra', 'dec', 'cutout_width', 'cutout_height'])
-
     To get a list of PrimaryHDU objects:
         >>> cutouts = cutout_tool('h_udf_wfc_b_drz_img.fits', catalog)
     To save to fits file, (returns a list of file names):
         >>> cutouts = cutout_tool('h_udf_wfc_b_drz_img.fits', catalog, to_fits=True)
-
     If the above catalog table is saved in an ECSV file with the proper units information:
         >>> cutouts = cutout_tool('h_udf_wfc_b_drz_img.fits', 'catalog.ecsv')
 
@@ -268,7 +266,10 @@ def cutout_tool(image, catalog, image_ext=0, origin=0,
             try:
                 hdu.writeto(fname, overwrite=overwrite)
             except OSError as e:
-                raise OSError(str(e)+" Set overwrite parameter to True.")
+                if not overwrite:
+                    raise OSError(str(e)+" Try setting overwrite parameter to True.")
+                else:
+                    raise e
             if verbose:
                 log.info('Wrote {0}'.format(fname))
             cutouts.append(fname)
