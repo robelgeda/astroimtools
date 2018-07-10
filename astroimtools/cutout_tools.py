@@ -83,37 +83,27 @@ def cutout_tool(image, catalog, image_ext=0, origin=0,
     image : str or `HDUList` or `PrimaryHDU` or `ImageHDU` or `CompImageHDU`
         Image to cut from. If string is provided, it is assumed to be a
         fits file path.
-
     catalog : str or `astropy.table.table.Table`
         Catalog table defining the sources to cut out. Must contain
         unit information as the cutouttool does not assume default units.
-
     image_ext : int, optional
         Image extension to extract header and data. Default is 0.
-
     origin : int
         Whether pixel coordinates are 0 or 1-basedpixel coordinates.
-
     to_fits : bool
         Save cutouts to fits files. Each cutout will be saved to a separate file.
-
     output_dir : str
         Path to directory to save the cutouts in. Set to
         current_working_dir/cutouts by default
-
     overwrite: bool, optional
         Overwrite existing files. Default is `False`.
-
     catalog_format : str, BaseReader
         Input catalog format if reading from a file. Default is `ascii.ecsv`.
         Note: Catalog format should be capable of staring units as metadata.
-
     delimiter: str
         Input catalog column delimiter string if reading from a file.
-
     suppress_rotation : bool
         Suppress rotation even if ``'cutout_pa'`` is provided. Default is `False`.
-
     verbose : bool, optional
         Print extra info. Default is `True`.
 
