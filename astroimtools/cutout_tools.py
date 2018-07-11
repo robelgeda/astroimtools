@@ -26,21 +26,23 @@ __all__ = ['make_cutouts', 'show_cutout_with_slit', 'cutout_tool']
 
 
 def cutout_tool(image, catalog, image_ext=0, origin=0,
-                to_fits=False, output_dir="cutouts", overwrite=False,
-                catalog_format='ascii.ecsv', delimiter=None,
-                suppress_rotation=False, verbose=True):
-    """
-    Make cutouts from a 2D image and write them to FITS files.
+                to_fits=False, output_dir='cutouts', overwrite=False,
+                delimiter=None, suppress_rotation=False, verbose=True):
+    """Make cutouts from a 2D image and write them to FITS files.
 
-    The input Catalog must have the following columns with unit info, where applicable:
+    The input Catalog must have the following columns, which must have
+    `~astropy.unit.Unit`s where applicable:
 
         * ``'id'`` - ID string; no unit necessary.
-        * ``'ra'`` or ``'x'``- RA (e.g., in degrees) or pixel x position (in units.pix).
-        * ``'dec'`` or ``'y'`` - DEC (e.g., in degrees) or pixel y position (in units.pix).
+        * ``'ra'`` or ``'x'``- RA (angular units e.g., deg, H:M:S, arcsec etc..)
+          or pixel x position (only in `~astropy.units.pix`).
+        * ``'dec'`` or ``'y'`` - Dec (angular units e.g., deg, D:M:S, arcsec etc..)
+          or pixel y position (only in `~astropy.units.pix`).
         * ``'cutout_width'`` - Cutout width (e.g., in arcsec, pix).
         * ``'cutout_height'`` - Cutout height (e.g., in arcsec, pix).
+
     Optional columns:
-        * ``'cutout_pa'`` - Cutout angle (e.g., in degrees). This is only
+        * ``'cutout_pa'`` - Cutout angle (e.g., in deg, arcsec). This is only
           use if user chooses to rotate the cutouts. Positive value
           will result in a clockwise rotation.
 
@@ -57,14 +59,14 @@ def cutout_tool(image, catalog, image_ext=0, origin=0,
 
     Examples
     --------
-    If you have a list of hubble ultra deep field ra and dec coords,
+    Given a list of Hubble Ultra Deep Field RA and Dec coords,
     you may use the tool as follows:
         >>> from astropy.table import Table
         >>> import astropy.units as u
 
         >>> ra = [53.18782913, 53.14794797, 53.15059559] * u.deg
         >>> dec = [-27.79405589, -27.77392421, -27.77158621] * u.deg
-        >>> ids = ["Galax_0", 123, 53.15059559*u.deg]
+        >>> ids = ["Galax_0", 123, 53.15059559 * u.deg]
         >>> cutout_width = cutout_height = [3.0, 4.0, 3.0] * u.arcsec
 
         >>> catalog = Table(
@@ -84,23 +86,22 @@ def cutout_tool(image, catalog, image_ext=0, origin=0,
     image : str or `HDUList` or `PrimaryHDU` or `ImageHDU` or `CompImageHDU`
         Image to cut from. If string is provided, it is assumed to be a
         fits file path.
-    catalog : str or `astropy.table.table.Table`
+    catalog : str or `~astropy.table.table.Table`
         Catalog table defining the sources to cut out. Must contain
         unit information as the cutouttool does not assume default units.
+        Must be an astropy Table or a file name to an ECSV file containing sources.
     image_ext : int, optional
-        Image extension to extract header and data. Default is 0.
+        If image is in an HDUList or read from file, use this image extension index
+        to extract header and data from the primary image. Default is 0.
     origin : int
         Whether pixel coordinates are 0 or 1-basedpixel coordinates.
     to_fits : bool
         Save cutouts to fits files. Each cutout will be saved to a separate file.
     output_dir : str
-        Path to directory to save the cutouts in. Set to
-        current_working_dir/cutouts by default
+        Path to directory to save the cutouts in. Set to current_working_dir/cutouts
+        by default. The directory created if it does not exist.
     overwrite: bool, optional
         Overwrite existing files. Default is `False`.
-    catalog_format : str, BaseReader
-        Input catalog format if reading from a file. Default is `ascii.ecsv`.
-        Note: Catalog format should be capable of staring units as metadata.
     delimiter: str
         Input catalog column delimiter string if reading from a file.
     suppress_rotation : bool
@@ -121,9 +122,9 @@ def cutout_tool(image, catalog, image_ext=0, origin=0,
     # read in the catalog file:
     if isinstance(catalog, str):
         if delimiter is None:
-            catalog = QTable.read(catalog, format=catalog_format)
+            catalog = QTable.read(catalog)
         else:
-            catalog = QTable.read(catalog, format=catalog_format, delimiter=delimiter)
+            catalog = QTable.read(catalog, delimiter=delimiter)
     elif not isinstance(catalog, Table):
         raise TypeError("Catalog should be an astropy.table.table.Table or"
                         " file name, got {0} instead".format(type(catalog)))
@@ -145,8 +146,9 @@ def cutout_tool(image, catalog, image_ext=0, origin=0,
         wcs = WCS(image_hdu.header)
 
     # Calculate the pixel scale of input image:
-    pixel_scale_width = proj_plane_pixel_scales(wcs)[0] * u.Unit(wcs.wcs.cunit[0]) / u.pix
-    pixel_scale_height = proj_plane_pixel_scales(wcs)[1] * u.Unit(wcs.wcs.cunit[1]) / u.pix
+    pixel_scales = proj_plane_pixel_scales(wcs)
+    pixel_scale_width = pixel_scales[0] * u.Unit(wcs.wcs.cunit[0]) / u.pix
+    pixel_scale_height = pixel_scales[1] * u.Unit(wcs.wcs.cunit[1]) / u.pix
 
     # Check if `SkyCoord`s are available:
     if 'ra' in catalog.colnames and 'dec' in catalog.colnames:
