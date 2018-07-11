@@ -118,9 +118,8 @@ def cutout_tool(image, catalog, wcs=None, image_ext=0, origin=0,
     Returns
     -------
     cutouts : list
-        A list of PrimaryHDU or file names (if saving to fits).
-        If cutout failed for a target, `None` will be added as a
-        place holder.
+        A list of NDData or fits PrimaryHDU. If cutout failed for a target,
+       `None` will be added as a place holder.
     """
     # Optional dependencies...
     from reproject.interpolation.high_level import reproject_interp
@@ -153,7 +152,7 @@ def cutout_tool(image, catalog, wcs=None, image_ext=0, origin=0,
         elif isinstance(image, (PrimaryHDU, ImageHDU, CompImageHDU)):
             image_hdu = image
         else:
-            raise TypeError("Expected ImageHDU, HDUList, or file name. Got {0} instead".format(type(image)))
+            raise TypeError("Expected array, ImageHDU, HDUList, or file name. Got {0} instead".format(type(image)))
         data = image_hdu.data
         wcs = WCS(image_hdu.header)
 
@@ -167,7 +166,7 @@ def cutout_tool(image, catalog, wcs=None, image_ext=0, origin=0,
         if 'x' in catalog.colnames and 'y' in catalog.colnames:
             raise Exception("Ambiguous catalog: Both (ra, dec) and pixel positions provided.")
         if catalog['ra'].unit is None or catalog['dec'].unit is None:
-            raise u.UnitsError("Units not specified for ra and/or dec.")
+            raise u.UnitsError("Units not specified for ra and/or dec columns.")
         coords = SkyCoord(catalog['ra'], catalog['dec'], unit=(catalog['ra'].unit,
                                                                catalog['dec'].unit))
     elif 'x' in catalog.colnames and 'y' in catalog.colnames:
