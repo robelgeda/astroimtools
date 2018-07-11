@@ -18,6 +18,7 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.io.fits import PrimaryHDU, ImageHDU, CompImageHDU
 from astropy.nddata.utils import (Cutout2D, NoOverlapError)
+from astropy.nddata.nddata import NDData
 from astropy.table import QTable, Table
 from astropy.wcs import WCS, NoConvergence
 from astropy.wcs.utils import proj_plane_pixel_scales
@@ -25,8 +26,8 @@ from astropy.wcs.utils import proj_plane_pixel_scales
 __all__ = ['make_cutouts', 'show_cutout_with_slit', 'cutout_tool']
 
 
-def cutout_tool(image, catalog, image_ext=0, origin=0,
-                to_fits=False, output_dir='cutouts', overwrite=False,
+def cutout_tool(image, catalog, wcs=None, image_ext=0, origin=0,
+                to_fits=False, output_dir=None, overwrite=False,
                 delimiter=None, suppress_rotation=False, verbose=True):
     """Make cutouts from a 2D image and write them to FITS files.
 
@@ -73,33 +74,38 @@ def cutout_tool(image, catalog, image_ext=0, origin=0,
         ...     data=[ids, ra, dec, cutout_width, cutout_height],
         ...     names=['id', 'ra', 'dec', 'cutout_width', 'cutout_height'])
 
-        # To get a list of PrimaryHDU objects:
+        # To get a list of NDData objects:
         >>> cutouts = cutout_tool('h_udf_wfc_b_drz_img.fits', catalog)
-        # To save to fits file, (returns a list of file names):
+        # To get a list of PrimaryHDU objects:
         >>> cutouts = cutout_tool('h_udf_wfc_b_drz_img.fits', catalog, to_fits=True)
+        # To save to fits file provide an output dir:
+        >>> cutouts = cutout_tool('h_udf_wfc_b_drz_img.fits', catalog, output_dir='~/cutouts')
 
         # If the above catalog table is saved in an ECSV file with the proper units information:
+        >>> catalog.write('catalog.ecsv', format='ascii.ecsv')
         >>> cutouts = cutout_tool('h_udf_wfc_b_drz_img.fits', 'catalog.ecsv')
 
     Parameters
     ----------
-    image : str or `HDUList` or `PrimaryHDU` or `ImageHDU` or `CompImageHDU`
+    image : str or array or `HDUList` or `PrimaryHDU` or `ImageHDU` or `CompImageHDU`
         Image to cut from. If string is provided, it is assumed to be a
         fits file path.
     catalog : str or `~astropy.table.table.Table`
         Catalog table defining the sources to cut out. Must contain
         unit information as the cutouttool does not assume default units.
         Must be an astropy Table or a file name to an ECSV file containing sources.
+    wcs : `~astropy.wcs.wcs.WCS`
+        WCS if the input image is an array.
     image_ext : int, optional
         If image is in an HDUList or read from file, use this image extension index
         to extract header and data from the primary image. Default is 0.
     origin : int
         Whether pixel coordinates are 0 or 1-basedpixel coordinates.
     to_fits : bool
-        Save cutouts to fits files. Each cutout will be saved to a separate file.
+        Return cutouts as a list of fits `PrimaryHDU`.
     output_dir : str
-        Path to directory to save the cutouts in. Set to current_working_dir/cutouts
-        by default. The directory created if it does not exist.
+        Path to directory to save the cutouts in. If provided, each cutout will be
+        saved to a separate file. The directory is created if it does not exist.
     overwrite: bool, optional
         Overwrite existing files. Default is `False`.
     delimiter: str
@@ -119,6 +125,8 @@ def cutout_tool(image, catalog, image_ext=0, origin=0,
     # Optional dependencies...
     from reproject.interpolation.high_level import reproject_interp
 
+    save_to_file = output_dir is not None
+
     # read in the catalog file:
     if isinstance(catalog, str):
         if delimiter is None:
@@ -130,7 +138,11 @@ def cutout_tool(image, catalog, image_ext=0, origin=0,
                         " file name, got {0} instead".format(type(catalog)))
 
     # Get data and wcs from ImageHDU:
-    if isinstance(image, str):
+    if isinstance(image, np.ndarray):
+        if wcs is None:
+            raise ValueError("WCS was not provided.")
+        data = image
+    elif isinstance(image, str):
         with fits.open(image) as pf:
             image_hdu = pf[image_ext]
             data = image_hdu.data
@@ -196,7 +208,7 @@ def cutout_tool(image, catalog, image_ext=0, origin=0,
         apply_rotation = False
 
     # Sub-directory, relative to working directory.
-    if to_fits:
+    if save_to_file:
         path = output_dir
         if not os.path.exists(path):
             os.mkdir(path)
@@ -265,7 +277,7 @@ def cutout_tool(image, catalog, image_ext=0, origin=0,
         hdu.header['OBJ_RA'] = (position.ra.deg, 'Cutout object RA in deg')
         hdu.header['OBJ_DEC'] = (position.dec.deg, 'Cutout object DEC in deg')
 
-        if to_fits:
+        if save_to_file:
             fname = os.path.join(
                 path, '{0}.fits'.format(row['id']))
             try:
@@ -277,9 +289,11 @@ def cutout_tool(image, catalog, image_ext=0, origin=0,
                     raise e
             if verbose:
                 log.info('Wrote {0}'.format(fname))
-            cutouts.append(fname)
-        else:
+
+        if to_fits:
             cutouts.append(hdu)
+        else:
+            cutouts.append(NDData(data=cutout.data, wcs=cutout.wcs, meta=hdu.header))
 
     return cutouts
 
