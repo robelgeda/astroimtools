@@ -32,7 +32,7 @@ env:
         - MAIN_CMD='python setup.py'
         - SETUP_CMD='test'
         - EVENT_TYPE='pull_request push'
-        - CONDA_DEPENDENCIES='scipy matplotlib'
+        - CONDA_DEPENDENCIES='scipy matplotlib re reproject'
         - CONDA_CHANNELS='astropy-ci-extras astropy'
         - SETUP_XVFB=True
         - ASTROPY_USE_SYSTEM_PYTEST=1
