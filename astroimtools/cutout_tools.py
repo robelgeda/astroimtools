@@ -7,6 +7,7 @@ from __future__ import (absolute_import, division, print_function,
 import os
 from functools import partial
 import math
+import errno
 
 # THIRD-PARTY
 import numpy as np
@@ -213,7 +214,12 @@ def cutout_tool(image, catalog, wcs=None, image_ext=0, origin=0,
     if save_to_file:
         path = output_dir
         if not os.path.exists(path):
-            os.mkdir(path)
+            try:
+                os.mkdir(path)
+            except OSError as exc:
+                if exc.errno != errno.EEXIST:
+                    raise
+                pass
 
     cutcls = partial(Cutout2D, data, wcs=wcs, mode='partial')
     cutouts = []
