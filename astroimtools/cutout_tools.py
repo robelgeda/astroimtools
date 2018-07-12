@@ -136,17 +136,20 @@ def cutout_tool(image, catalog, wcs=None, image_ext=0, origin=0,
         raise TypeError("Catalog should be an astropy.table.table.Table or"
                         " file name, got {0} instead".format(type(catalog)))
 
-    # Get data and wcs from ImageHDU:
+    # Load data and wcs:
     if isinstance(image, np.ndarray):
+        # If image is an array type
         if wcs is None:
             raise ValueError("WCS was not provided.")
         data = image
     elif isinstance(image, str):
+        # Read data and WCS from file
         with fits.open(image) as pf:
             image_hdu = pf[image_ext]
             data = image_hdu.data
             wcs = WCS(image_hdu.header)
     else:
+        # If image is HDUList or HDU:
         if isinstance(image, fits.hdu.hdulist.HDUList):
             image_hdu = image[image_ext]
         elif isinstance(image, (PrimaryHDU, ImageHDU, CompImageHDU)):
@@ -218,6 +221,7 @@ def cutout_tool(image, catalog, wcs=None, image_ext=0, origin=0,
         if apply_rotation:
             pix_rot = row['cutout_pa'].to(u.degree).value
 
+            # Construct new rotated WCS:
             cutout_wcs = WCS(naxis=2)
             cutout_wcs.wcs.ctype = ['RA---TAN', 'DEC--TAN']
             cutout_wcs.wcs.crval = [position.ra.deg, position.dec.deg]
@@ -232,6 +236,7 @@ def cutout_tool(image, catalog, wcs=None, image_ext=0, origin=0,
 
             cutout_hdr = cutout_wcs.to_header()
 
+            # Rotate the image using reproject
             try:
                 cutout_arr = reproject_interp(
                     (data, wcs), cutout_hdr, shape_out=(math.floor(y_pix + math.copysign(0.5, y_pix)),
@@ -246,6 +251,7 @@ def cutout_tool(image, catalog, wcs=None, image_ext=0, origin=0,
             cutout_arr = cutout_arr[0]  # Ignore footprint
             cutout_hdr['OBJ_ROT'] = (pix_rot, 'Cutout rotation in degrees')
         else:
+            # Make cutout or handle exceptions by adding None to output list
             try:
                 cutout = cutcls(position, size=(y_pix, x_pix))
             except NoConvergence:
@@ -264,6 +270,7 @@ def cutout_tool(image, catalog, wcs=None, image_ext=0, origin=0,
                 cutout_hdr = cutout.wcs.to_header()
                 cutout_arr = cutout.data
 
+        # If cutout result is empty, skip that target
         if np.array_equiv(cutout_arr, 0):
             if verbose:
                 log.info('No data in cutout: Skipping {0}'.format(row['id']))
@@ -276,6 +283,7 @@ def cutout_tool(image, catalog, wcs=None, image_ext=0, origin=0,
         hdu.header['OBJ_RA'] = (position.ra.deg, 'Cutout object RA in deg')
         hdu.header['OBJ_DEC'] = (position.dec.deg, 'Cutout object DEC in deg')
 
+        # Save to file if output directory is provided
         if save_to_file:
             fname = os.path.join(
                 path, '{0}.fits'.format(row['id']))
@@ -289,6 +297,7 @@ def cutout_tool(image, catalog, wcs=None, image_ext=0, origin=0,
             if verbose:
                 log.info('Wrote {0}'.format(fname))
 
+        # Add cutout to output list. (as NDData by default)
         if to_fits:
             cutouts.append(hdu)
         else:
