@@ -250,7 +250,7 @@ def cutout_tool(image, catalog, wcs=None, image_ext=0, origin=0,
             try:
                 cutout_arr = reproject_interp(
                     (data, wcs), cutout_hdr, shape_out=(math.floor(y_pix + math.copysign(0.5, y_pix)),
-                        math.floor(x_pix + math.copysign(0.5, x_pix))), order=2)
+                        math.floor(x_pix + math.copysign(0.5, x_pix))), order=1)
             except Exception:
                 if verbose:
                     log.info('reproject failed: '

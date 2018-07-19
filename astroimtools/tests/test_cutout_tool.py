@@ -101,7 +101,7 @@ class TestCutoutTool(FitsTestCase):
         ra = [0] * u.deg  # Center pixel
         dec = [45] * u.deg  # Center pixel
         ids = ["target_1"]
-        cutout_width = cutout_height = [3.0] * u.pix # Cutout should be 4 by 4
+        cutout_width = cutout_height = [10.0] * u.pix # Cutout should be 4 by 4
 
         catalog = Table(
             data=[ids, ra, dec, cutout_width, cutout_height],
@@ -113,6 +113,11 @@ class TestCutoutTool(FitsTestCase):
         w_orig = wcs.WCS(image_hdu.header)
         w_new = wcs.WCS(cutout.header)
 
+        print(image_hdu.data)
+        print(" ")
+        print(cutout.data)
+        print(" ")
+        """
         for x_new, x_orig in enumerate(range(3, 6)):
             for y_new, y_orig in enumerate(range(3, 6)):
                 coords_orig = SkyCoord.from_pixel(x_orig, y_orig, w_orig, origin=0)
@@ -121,7 +126,7 @@ class TestCutoutTool(FitsTestCase):
                 assert_almost_equal(image_hdu.data[x_orig][y_orig], cutout.data[x_new][y_new])
                 assert_almost_equal(coords_orig.ra.value, coords_new.ra.value)
                 assert_almost_equal(coords_orig.dec.value, coords_new.dec.value)
-
+        """
         # Test for rotation:
         pa = [90] * u.deg
         catalog.add_column(pa, name="cutout_pa")
@@ -132,6 +137,11 @@ class TestCutoutTool(FitsTestCase):
         w_orig = wcs.WCS(image_hdu.header)
         w_new = wcs.WCS(cutout.header)
 
+        print(image_hdu.data)
+        print(" ")
+        print(cutout.data)
+        print(" ")
+        """
         for x_new, x_orig in enumerate(range(6, 3, -1)):
             for y_new, y_orig in enumerate(range(6, 3, -1)):
                 coords_orig = SkyCoord.from_pixel(x_orig, y_orig, w_orig, origin=0)
@@ -140,3 +150,5 @@ class TestCutoutTool(FitsTestCase):
                 assert_almost_equal(image_hdu.data[x_orig][y_orig], cutout.data[x_new][y_new])
                 assert_almost_equal(coords_orig.ra.value, coords_new.ra.value)
                 assert_almost_equal(coords_orig.dec.value, coords_new.dec.value)
+        """
+        assert(1 == 2)
