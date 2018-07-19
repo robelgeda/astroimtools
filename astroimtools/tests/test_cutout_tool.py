@@ -30,12 +30,12 @@ class TestCutoutTool(FitsTestCase):
     def construct_test_image():
         # Construct data: 10 X 10 array where
         # the value at each pixel (x, y) is x*10 + y
-        data = np.array([i * 9 + np.arange(9) for i in range(9)])
+        data = np.array([i * 10 + np.arange(10) for i in range(10)])
 
         # Construct a WCS for test image
         # N.B: Pixel scale should be 1 deg/pix
         w = wcs.WCS()
-        w.wcs.crpix = [4, 4]
+        w.wcs.crpix = [5, 5]
         w.wcs.crval = [0, 45]
         w.wcs.ctype = ['RA---TAN', 'DEC--TAN']
 
@@ -101,7 +101,7 @@ class TestCutoutTool(FitsTestCase):
         ra = [0] * u.deg  # Center pixel
         dec = [45] * u.deg  # Center pixel
         ids = ["target_1"]
-        cutout_width = cutout_height = [9.0] * u.pix # Cutout should be 4 by 4
+        cutout_width = cutout_height = [3.0] * u.pix # Cutout should be 4 by 4
 
         catalog = Table(
             data=[ids, ra, dec, cutout_width, cutout_height],
@@ -123,7 +123,7 @@ class TestCutoutTool(FitsTestCase):
                 assert_almost_equal(coords_orig.dec.value, coords_new.dec.value)
 
         # Test for rotation:
-        pa = [30] * u.deg
+        pa = [90] * u.deg
         catalog.add_column(pa, name="cutout_pa")
 
         cutout = cutout_tool(image_hdu, catalog, to_fits=True)[0]
