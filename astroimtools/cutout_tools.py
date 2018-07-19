@@ -69,7 +69,7 @@ def cutout_tool(image, catalog, wcs=None, image_ext=0, origin=0,
         >>> ra = [53.18782913, 53.14794797, 53.15059559] * u.deg
         >>> dec = [-27.79405589, -27.77392421, -27.77158621] * u.deg
         >>> ids = ["Galax_0", 123, 53.15059559 * u.deg]
-        >>> cutout_width = cutout_height = [3.0, 4.0, 3.0] * u.arcsec # Square pixels
+        >>> cutout_width = cutout_height = [3.0, 4.0, 3.0] * u.arcsec
 
         >>> catalog = Table(
         ...     data=[ids, ra, dec, cutout_width, cutout_height],
@@ -234,12 +234,8 @@ def cutout_tool(image, catalog, wcs=None, image_ext=0, origin=0,
             # Construct new rotated WCS:
             cutout_wcs = WCS(naxis=2)
             cutout_wcs.wcs.ctype = ['RA---TAN', 'DEC--TAN']
-            cutout_wcs.wcs.crval = wcs.wcs.crval#[position.ra.deg, position.dec.deg]
-            cutout_wcs.wcs.crpix = wcs.wcs.crpix#[(x_pix - 1) * 0.5, (y_pix - 1) * 0.5]
-
-            print(wcs)
-            print(" ")
-            print(cutout_wcs)
+            cutout_wcs.wcs.crval = [position.ra.deg, position.dec.deg]
+            cutout_wcs.wcs.crpix = [(x_pix - 1) * 0.5, (y_pix - 1) * 0.5]
 
             try:
                 cutout_wcs.wcs.cd = wcs.wcs.cd
@@ -254,7 +250,7 @@ def cutout_tool(image, catalog, wcs=None, image_ext=0, origin=0,
             try:
                 cutout_arr = reproject_interp(
                     (data, wcs), cutout_hdr, shape_out=(math.floor(y_pix + math.copysign(0.5, y_pix)),
-                        math.floor(x_pix + math.copysign(0.5, x_pix))), order=1)
+                        math.floor(x_pix + math.copysign(0.5, x_pix))), order=2)
             except Exception:
                 if verbose:
                     log.info('reproject failed: '
