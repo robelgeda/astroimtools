@@ -6,8 +6,8 @@ import tempfile
 from numpy.testing import assert_allclose, assert_almost_equal
 
 import os
+
 import numpy as np
-from astropy.table import Table
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
@@ -28,15 +28,16 @@ class TestCutoutTool(FitsTestCase):
 
     @staticmethod
     def construct_test_image():
-        # Construct data: 10 X 10 array where
+        # Construct data: 9 X 9 array where
         # the value at each pixel (x, y) is x*10 + y
-        data = np.array([i * 10 + np.arange(10) for i in range(10)])
+        data = np.array([i * 9 + np.arange(9) for i in range(9)])
 
         # Construct a WCS for test image
         # N.B: Pixel scale should be 1 deg/pix
         w = wcs.WCS()
         w.wcs.crpix = [5, 5]
         w.wcs.crval = [0, 45]
+        w.wcs.cdelt = [-1, 1]
         w.wcs.ctype = ['RA---TAN', 'DEC--TAN']
 
         # Construct fits header
@@ -44,11 +45,6 @@ class TestCutoutTool(FitsTestCase):
 
         # Construct Image and return:
         return fits.PrimaryHDU(data, h)
-
-        def temp(self, filename):
-            """ Returns the full path to a file in the test temp dir."""
-
-            return
 
     def test_cutout_tool_inputs(self):
         # Construct image:
@@ -101,8 +97,8 @@ class TestCutoutTool(FitsTestCase):
         ra = [0] * u.deg  # Center pixel
         dec = [45] * u.deg  # Center pixel
         ids = ["target_1"]
-        cutout_width = cutout_height = [10.0] * u.pix # Cutout should be 4 by 4
-
+        # Cutout should be 3 by 3:
+        cutout_width = cutout_height = [3.0] * u.pix
         catalog = Table(
             data=[ids, ra, dec, cutout_width, cutout_height],
             names=['id', 'ra', 'dec', 'cutout_width', 'cutout_height'])
@@ -113,11 +109,6 @@ class TestCutoutTool(FitsTestCase):
         w_orig = wcs.WCS(image_hdu.header)
         w_new = wcs.WCS(cutout.header)
 
-        print(image_hdu.data)
-        print(" ")
-        print(cutout.data)
-        print(" ")
-        """
         for x_new, x_orig in enumerate(range(3, 6)):
             for y_new, y_orig in enumerate(range(3, 6)):
                 coords_orig = SkyCoord.from_pixel(x_orig, y_orig, w_orig, origin=0)
@@ -126,9 +117,8 @@ class TestCutoutTool(FitsTestCase):
                 assert_almost_equal(image_hdu.data[x_orig][y_orig], cutout.data[x_new][y_new])
                 assert_almost_equal(coords_orig.ra.value, coords_new.ra.value)
                 assert_almost_equal(coords_orig.dec.value, coords_new.dec.value)
-        """
         # Test for rotation:
-        pa = [90] * u.deg
+        pa = [180] * u.deg
         catalog.add_column(pa, name="cutout_pa")
 
         cutout = cutout_tool(image_hdu, catalog, to_fits=True)[0]
@@ -137,18 +127,11 @@ class TestCutoutTool(FitsTestCase):
         w_orig = wcs.WCS(image_hdu.header)
         w_new = wcs.WCS(cutout.header)
 
-        print(image_hdu.data)
-        print(" ")
-        print(cutout.data)
-        print(" ")
-        """
-        for x_new, x_orig in enumerate(range(6, 3, -1)):
-            for y_new, y_orig in enumerate(range(6, 3, -1)):
+        for x_new, x_orig in enumerate(range(5, 2, -1)):
+            for y_new, y_orig in enumerate(range(5, 2, -1)):
                 coords_orig = SkyCoord.from_pixel(x_orig, y_orig, w_orig, origin=0)
                 coords_new = SkyCoord.from_pixel(x_new, y_new, w_new, origin=0)
 
                 assert_almost_equal(image_hdu.data[x_orig][y_orig], cutout.data[x_new][y_new])
                 assert_almost_equal(coords_orig.ra.value, coords_new.ra.value)
                 assert_almost_equal(coords_orig.dec.value, coords_new.dec.value)
-        """
-        assert(1 == 2)

@@ -235,7 +235,7 @@ def cutout_tool(image, catalog, wcs=None, image_ext=0, origin=0,
             cutout_wcs = WCS(naxis=2)
             cutout_wcs.wcs.ctype = ['RA---TAN', 'DEC--TAN']
             cutout_wcs.wcs.crval = [position.ra.deg, position.dec.deg]
-            cutout_wcs.wcs.crpix = [(x_pix - 1) * 0.5, (y_pix - 1) * 0.5]
+            cutout_wcs.wcs.crpix = [(x_pix + 1) * 0.5, (y_pix + 1) * 0.5]
 
             try:
                 cutout_wcs.wcs.cd = wcs.wcs.cd
